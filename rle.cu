@@ -6,7 +6,7 @@ __global__ void backWardMask(std::string * input, int * mask, int n) {
     int stride = blockDim.x * gridDim.x;
 
     if(index == 0) {
-        mask[i] = 1;
+        mask[0] = 1;
         return;
     }
 
@@ -98,16 +98,16 @@ __global__ void scatterKernel(int * compactedMask, int * totalRuns, int * in, in
 
 int main(int argc, char ** argv) {
 
-    std::string * in = new std::string(argv[1]);
-    int input_size = *in.length();
+    char * in = argv[1];
+    int input_size = sizeof(argv[1])/sizeof(argv[0]);
     int * mask = new int[input_size];
     int * scannedMask = new int[input_size];
     int * compactedMask = new int[input_size];
     int * totalRuns = new int;
 
-    cudaMallocManaged(&in, *in.length() * sizeof(char));
-    cudaMallocManaged(&mask, *in.length() * sizeof(int));
-    cudaMallocManaged(&scannedMask, *in.length() * sizeof(int));
+    cudaMallocManaged(&in, input_size * sizeof(char));
+    cudaMallocManaged(&mask, input_size * sizeof(int));
+    cudaMallocManaged(&scannedMask, input_size * sizeof(int));
 
     int blockSize; 
     int minGridSize;
