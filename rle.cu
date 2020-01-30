@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 
-__global__ void backWardMask(std::string * input, int * mask, int n) {
+__global__ void backWardMask(char * input, int * mask, int n) {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = blockDim.x * gridDim.x;
 
@@ -17,8 +17,8 @@ __global__ void backWardMask(std::string * input, int * mask, int n) {
 
 // NVIDIA's upsweep and downsweep prefix sum (prescan)
 // TO-DO -> eliminate bank conflicts
-__global__ void prescan(float *g_odata, float *g_idata, int n) {
-    extern __shared__ float temp[];
+__global__ void prescan(int *g_odata, int *g_idata, int n) {
+    extern __shared__ int temp[];
     int thid = threadIdx.x; 
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     int offset = 1; 
@@ -48,7 +48,7 @@ __global__ void prescan(float *g_odata, float *g_idata, int n) {
         if (thid < d) {
             int ai = offset*(2*thid+1)-1;     
             int bi = offset*(2*thid+2)-1;
-            float t = temp[ai];
+            int t = temp[ai];
             temp[ai] = temp[bi]; 
             temp[bi] += t;       
         } 
@@ -124,11 +124,19 @@ int main(int argc, char ** argv) {
     // scatterKernel<<<,>>>();
     // cudaDeviceSynchronize();
 
-    std::cout << *in << std::endl;
-    std::cout << *mask << std::endl; 
-    std::cout << *scannedMask << std::endl; 
-
-    delete in;
+    for(int i = 0; i < input_size; i++) {
+        std::cout << in[i] << " ";
+    }
+    std::cout << endl;
+    for(int i = 0; i < input_size; i++) {
+        std::cout << mask[i] << " ";
+    }
+    std::cout << endl;
+    for(int i = 0; i < input_size; i++) {
+        std::cout << scannedMask[i] << " ";
+    }
+    std::cout << endl;
+    
     delete [] mask;
     delete [] scannedMask;
 }
