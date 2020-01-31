@@ -46,7 +46,7 @@ __global__ void prescan(int *g_odata, int *g_idata, int * blockSums, int n) {
 
     // clear the last element
     if (thid == 0) {
-        blockSums[blockIdx.x] = temp[2*blockDim.x - 1]
+        blockSums[blockIdx.x] = temp[2*blockDim.x - 1];
         temp[2*blockDim.x - 1] = 0; 
     }
 
@@ -64,7 +64,7 @@ __global__ void prescan(int *g_odata, int *g_idata, int * blockSums, int n) {
     }
     __syncthreads();
 
-    temp[2*thid] = temp[2*thid + 1]
+    temp[2*thid] = temp[2*thid + 1];
     
     if(thid == blockDim.x - 1) {
         temp[2*thid + 1] = blockSums[blockIdx.x];
@@ -126,13 +126,16 @@ __global__ void scatterKernel(int * compactedMask, int * totalRuns, int * in, in
 int main(int argc, char ** argv) {
 
     char * in = argv[1];
-    int input_size = (int)strlen(argv[1])
+    int input_size = (int)strlen(argv[1]);
 
     // GPU variables
-    int * mask, * scannedMask, compactedMask;
+    int * mask;
+    int * scannedMask;
+    int * compactedMask;
     int * totalRuns;
     char * input;
-    int * block_sums, * scannedBlockSums;
+    int * block_sums;
+    int * scannedBlockSums;
     int gridSize = (input_size + 1024 - 1) / 1024;
 
     cudaMallocManaged(&input, input_size * sizeof(char));
@@ -166,14 +169,14 @@ int main(int argc, char ** argv) {
     for(int i = 0; i < input_size; i++) {
         std::cout << in[i] << " ";
     }
-    std::cout << endl;
+    std::cout << std::endl;
     for(int i = 0; i < input_size; i++) {
         std::cout << mask[i] << " ";
     }
-    std::cout << endl;
+    std::cout << std::endl;
     for(int i = 0; i < input_size; i++) {
         std::cout << scannedMask[i] << " ";
     }
-    std::cout << endl;
+    std::cout << std::endl;
     
 }
