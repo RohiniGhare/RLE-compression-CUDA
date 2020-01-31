@@ -150,6 +150,9 @@ int main(int argc, char ** argv) {
 
     backWardMask<<<8, 1024>>>(in, mask, input_size);
     cudaDeviceSynchronize();
+    for(int i = 0; i < input_size; i++) {
+        std::cout << mask[i] << " ";
+    }
     prescan<<<gridSize, 1024>>>(scannedMask, mask, block_sums, input_size);
     cudaDeviceSynchronize();
 
