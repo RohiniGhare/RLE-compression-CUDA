@@ -130,7 +130,9 @@ int main(int argc, char ** argv) {
 
     // GPU variables
     int * mask;
+    int * host_mask;
     int * scannedMask;
+    int * host_scannedMask;
     int * compactedMask;
     int * totalRuns;
     char * input;
@@ -138,6 +140,9 @@ int main(int argc, char ** argv) {
     int * scannedBlockSums;
     int * bs;
     int gridSize = (input_size + 1024 - 1) / 1024;
+
+    host_mask = (int *)malloc(input_size * sizeof(int));
+    host_scannedMask = (int *)malloc(input_size * sizeof(int));
 
     cudaMallocManaged(&input, input_size * sizeof(char));
     cudaMallocManaged(&mask, input_size * sizeof(int));
@@ -147,14 +152,10 @@ int main(int argc, char ** argv) {
     cudaMallocManaged(&bs, gridSize * sizeof(int));
 
     cudaMemcpy(input, in, input_size * sizeof(char), cudaMemcpyHostToDevice);
-    for(int i = 0; i < input_size; i++) {
-        std::cout << input[i] << " ";
-    }
+
     backWardMask<<<8, 1024>>>(in, mask, input_size);
     cudaDeviceSynchronize();
-    for(int i = 0; i < input_size; i++) {
-        std::cout << mask[i] << " ";
-    }
+
     prescan<<<gridSize, 1024>>>(scannedMask, mask, block_sums, input_size);
     cudaDeviceSynchronize();
 
@@ -168,6 +169,9 @@ int main(int argc, char ** argv) {
         addOffsets<<<gridSize, 2048>>>(scannedMask, scannedBlockSums);
     }
 
+    cudaMemcpy(host_mask, mask, input_size * sizeof(int), cudaMemcpyDeviceToHost);
+    cudaMemcpy(host_scannedMask, scannedMask, input_size * sizeof(int), cudaMemcpyDeviceToHost);
+
     // compactKernel<<<blocks, 512>>>();
     // cudaDeviceSynchronize();
     // scatterKernel<<<,>>>();
@@ -178,11 +182,11 @@ int main(int argc, char ** argv) {
     }
     std::cout << std::endl;
     for(int i = 0; i < input_size; i++) {
-        std::cout << mask[i] << " ";
+        std::cout << host_mask[i] << " ";
     }
     std::cout << std::endl;
     for(int i = 0; i < input_size; i++) {
-        std::cout << scannedMask[i] << " ";
+        std::cout << host_scannedMask[i] << " ";
     }
     std::cout << std::endl;
     
