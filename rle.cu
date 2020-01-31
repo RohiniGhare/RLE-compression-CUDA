@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <math.h>
+#include <stdio.h>
 
 __global__ void backWardMask(char * input, int * mask, int n) {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
@@ -8,10 +9,13 @@ __global__ void backWardMask(char * input, int * mask, int n) {
 
     if(index == 0) {
         mask[0] = 1;
-        return; // ?
+        for(int i = index + stride; i < n; i+=stride) {
+            mask[i] = input[i] == input[i - 1] ? 0 : 1;
+        }
+        return;
     }
 
-    for(int i = index; i < n; i+=stride) {
+    for(int i = index; i < n - 1; i+=stride) {
         mask[i] = input[i] == input[i - 1] ? 0 : 1;
     }
 }
@@ -141,8 +145,8 @@ int main(int argc, char ** argv) {
     int * bs;
     int gridSize = (input_size + 1024 - 1) / 1024;
 
-    host_mask = (int *)malloc(input_size * sizeof(int));
-    host_scannedMask = (int *)malloc(input_size * sizeof(int));
+    //host_mask = (int *)malloc(input_size * sizeof(int));
+    //host_scannedMask = (int *)malloc(input_size * sizeof(int));
 
     cudaMallocManaged(&input, input_size * sizeof(char));
     cudaMallocManaged(&mask, input_size * sizeof(int));
@@ -169,8 +173,8 @@ int main(int argc, char ** argv) {
         addOffsets<<<gridSize, 2048>>>(scannedMask, scannedBlockSums);
     }
 
-    cudaMemcpy(host_mask, mask, input_size * sizeof(int), cudaMemcpyDeviceToHost);
-    cudaMemcpy(host_scannedMask, scannedMask, input_size * sizeof(int), cudaMemcpyDeviceToHost);
+    //cudaMemcpy(host_mask, mask, input_size * sizeof(int), cudaMemcpyDeviceToHost);
+    //cudaMemcpy(host_scannedMask, scannedMask, input_size * sizeof(int), cudaMemcpyDeviceToHost);
 
     // compactKernel<<<blocks, 512>>>();
     // cudaDeviceSynchronize();
@@ -178,16 +182,16 @@ int main(int argc, char ** argv) {
     // cudaDeviceSynchronize();
 
     for(int i = 0; i < input_size; i++) {
-        std::cout << in[i] << " ";
+        std::cout << input[i] << " ";
     }
     std::cout << std::endl;
     for(int i = 0; i < input_size; i++) {
-        std::cout << host_mask[i] << " ";
+        std::cout << mask[i] << " ";
     }
-    std::cout << std::endl;
-    for(int i = 0; i < input_size; i++) {
-        std::cout << host_scannedMask[i] << " ";
-    }
-    std::cout << std::endl;
+    // std::cout << std::endl;
+    // for(int i = 0; i < input_size; i++) {
+    //     std::cout << scannedMask[i] << " ";
+    // }
+    // std::cout << std::endl;
     
 }
