@@ -69,7 +69,7 @@ __global__ void prescan(int *g_odata, int *g_idata, int * blockSums, int n) {
     if(thid == blockDim.x - 1) {
         temp[2*thid + 1] = blockSums[blockIdx.x];
     } else {
-        temp[2*thid + 1] = temp[2*thid + 2]
+        temp[2*thid + 1] = temp[2*thid + 2];
     }
 
     g_odata[index] = temp[2*thid];  
@@ -136,6 +136,7 @@ int main(int argc, char ** argv) {
     char * input;
     int * block_sums;
     int * scannedBlockSums;
+    int * bs;
     int gridSize = (input_size + 1024 - 1) / 1024;
 
     cudaMallocManaged(&input, input_size * sizeof(char));
@@ -143,18 +144,19 @@ int main(int argc, char ** argv) {
     cudaMallocManaged(&scannedMask, input_size * sizeof(int));
     cudaMallocManaged(&block_sums, gridSize * sizeof(int));
     cudaMallocManaged(&scannedBlockSums, gridSize * sizeof(int));
+    cudaMallocManaged(&bs, gridSize * sizeof(int));
 
     cudaMemcpy(input, in, input_size * sizeof(char), cudaMemcpyHostToDevice);
 
     backWardMask<<<8, 1024>>>(in, mask, input_size);
     cudaDeviceSynchronize();
-    prescan<<<gridSize, 1024>>>(scannedMask, mask, input_size);
+    prescan<<<gridSize, 1024>>>(scannedMask, mask, block_sums, input_size);
     cudaDeviceSynchronize();
 
     if(input_size > 2048) {
         
         // scan of block scans
-        prescan<<<1,ceil(gridSize)>>>(scannedBlockSums, block_sums, gridSize);
+        prescan<<<1,ceil(gridSize)>>>(scannedBlockSums, block_sums, bs, gridSize);
         cudaDeviceSynchronize();
 
         // add the offset
